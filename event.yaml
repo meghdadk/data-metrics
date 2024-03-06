@@ -1,0 +1,31 @@
+# config.yaml
+cifar10_resnet18:
+  checkpoints_dir: checkpoints/
+  dataset: cifar10withids
+  model: resnet18
+  augment: false
+  val_frac: 0
+  data_dir: /data/image_data/cifar10/
+
+  lr: 0.01 
+  batch_size: 128
+  optimizer: sgd
+  weight_decay: 0.0005
+  epochs: 30
+  momentum: 0.9
+  lr_decay_rate: 0.1
+  lr_decay_epochs: "15, 20, 25"
+  criterion: ce
+
+  weights_init: random 
+  num_workers: 4
+
+  subset_ratio: 0.7
+  train: false
+  num_runs: 5
+
+  wandb_mode: online 
+  wandb_project: Hidden_Layer_Reduction
+  wandb_entity: "mkurmanji"
+  wandb_run_id: null
+  wandb_group_name: "cisar10_resnet18"
