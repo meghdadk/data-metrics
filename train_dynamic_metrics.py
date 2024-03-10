@@ -309,15 +309,16 @@ if __name__ == '__main__':
     rich_print(args)
     print ('\n')
 
+    for i in range(42, 52):
 
-    npz_fn = 'event_results.npz'
-    if os.path.exists(npz_fn):
-        estimates = np.load(npz_fn)
-    else:
-        metrics = estimate(seed=42, args=args, logger=None)
-        np.savez('event_results.npz', **metrics)
+        npz_fn = f'event_results_s{i}.npz'
+        if os.path.exists(npz_fn):
+            estimates = np.load(npz_fn)
+        else:
+            metrics = estimate(seed=42, args=args, logger=None)
+            np.savez(f'event_results_s{i}.npz', **metrics)
         
     #show_examples(estimates)
 
-    loaded_results = np.load('event_results.npz')
+    #loaded_results = np.load('event_results.npz')
     
