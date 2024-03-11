@@ -207,7 +207,7 @@ def estimate(seed, args, logger=None):
     sorted_indices = np.argsort(class_memorization)
     sorted_memorization = memorization[sorted_indices]
 
-    # Select the two largest indices
+    # Select the largest indices
     largest_indices = sorted_indices[-10:]
 
     # Find the corresponding rows in info_flow
