@@ -191,7 +191,7 @@ def estimate(args, logger=None):
     results = []
 
     for i_run in range(0, args.num_runs,1):
-        #save_seed_indices(i_run, args)
+        save_seed_indices(i_run, args)
         results.append(subset_train(i_run, args, logger))
 
     trainset_mask = np.vstack([ret[0] for ret in results])
@@ -255,7 +255,7 @@ def show_examples(estimates, args, n_show=10):
         _show_contexts(idx_random, n_context1 + 1)
 
     plt.tight_layout()
-    plt.savefig('cifar10-examples.pdf', bbox_inches='tight')
+    plt.savefig('results/cifar10-examples.pdf', bbox_inches='tight')
 
 if __name__ == '__main__':
 
@@ -264,18 +264,11 @@ if __name__ == '__main__':
     print ('\n')
 
 
-    npz_fn = 'estimates_results.npz'
+    npz_fn = 'results/estimates_results.npz'
     if os.path.exists(npz_fn):
         estimates = np.load(npz_fn)
     else:
         metrics = estimate(args, logger=None)
-        np.savez('estimates_results.npz', **metrics)
+        np.savez('results/estimates_results.npz', **metrics)
         
     #show_examples(estimates)
-
-    loaded_results = np.load('estimates_results.npz')
-    loaded_memorization = loaded_results['memorization']
-    loaded_influence = loaded_results['influence']
-    loaded_cscores = loaded_results['c_scores']
-
-    print("loaded_memorization: ", loaded_memorization.shape, "loaded_influence: ", loaded_influence.shape, "loaded_cscores: ", loaded_cscores.shape)

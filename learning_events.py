@@ -33,9 +33,7 @@ def argparser():
     parser.add_argument('--config', type=str, default=None, help='Path to the configuration YAML file')
     parser.add_argument('--exp-key', type=str, default=None, help='Key for the experiment configuration')
     
-    parser.add_argument('--train', action='store_true', help='Whether to train the model or load checkpoints')
-    parser.add_argument('--num-runs', type=int, default=10, help='Number of shadow models')
-    parser.add_argument('--subset-ratio', type=float, default=0.7, help='Fraction of seen vs unseen data to use for training')
+    parser.add_argument('--num-runs', type=int, default=10, help='Number of random seeds to run')
 
     parser.add_argument('--dataset', type=str, default='cifar10', help='Name of the dataset to use')
     parser.add_argument('--augment', action='store_true', help='Whether to use data augmentation')
@@ -47,7 +45,6 @@ def argparser():
     parser.add_argument('--epochs', type=int, default=30, help='Number of epochs to train for')
     parser.add_argument('--batch-size', type=int, default=128, help='Batch size for training')
     parser.add_argument('--optimizer', type=str, default='sgd', help='Optimizer to use (Adam, SGD)')
-    parser.add_argument('--criterion', type=str, default='ce', help='criteria to use (ce, mse)')
     parser.add_argument('--weight-decay', type=float, default=5e-4, help='Weight decay (L2 penalty)')
     parser.add_argument('--lr-decay-rate', type=float, default=0.1, help='Learning rate decay rate (gamma)')
     parser.add_argument('--lr-decay-epochs', type=str, default='15,20,25', help='Comma-separated string of epochs after which to decay the learning rate')
@@ -104,6 +101,7 @@ def calculate_negative_entropy(probs):
     return (probs * torch.log(probs)).sum().item()
 
 def train_model_track_event(model, train_loader, val_loader, args, device, logger=None):
+    '''Deprecated!'''
 
     criterion = nn.CrossEntropyLoss().to(device)
     
@@ -205,8 +203,6 @@ def train_model(model, train_loader, val_loader, args, device, logger=None):
     p_max_values = defaultdict(list)
     p_e_values = defaultdict(list)
     acc_values = defaultdict(list)
-    # Stores the accuracy of the previous step for comparison
-    previous_step_accuracy = {}
     # Stores the averaged P_L and the step number when a learning-event occurs
     learning_events = {}
 
@@ -284,12 +280,11 @@ def estimate(seed, args, logger=None):
     train_loader, _, test_loader, _, _, _, num_classes = get_data(seed, args)
 
     model = get_model(seed, args, num_classes)
-
-    checkpoint = args.checkpoints_dir + f"{args.model}_{args.dataset}_seed{seed}.pt"
     
     results = train_model(model, train_loader, None, args, device, logger)
 
     # Save the model to file
+    checkpoint = args.checkpoints_dir + f"event_{args.model}_{args.dataset}_seed{seed}.pt"
     torch.save(model.state_dict(), checkpoint)
 
     train_accuracy = evaluate_model(model, train_loader, device)
@@ -317,8 +312,4 @@ if __name__ == '__main__':
         else:
             metrics = estimate(seed=42, args=args, logger=None)
             np.savez(f'event_results_s{i}.npz', **metrics)
-        
-    #show_examples(estimates)
-
-    #loaded_results = np.load('event_results.npz')
     
