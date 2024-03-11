@@ -31,10 +31,7 @@ def argparser():
     parser.add_argument('--config', type=str, default=None, help='Path to the configuration YAML file')
     parser.add_argument('--exp-key', type=str, default=None, help='Key for the experiment configuration')
     
-    parser.add_argument('--train', action='store_true', help='Whether to train the model or load checkpoints')
-    parser.add_argument('--num-runs', type=int, default=10, help='Number of shadow models')
-    parser.add_argument('--subset-ratio', type=float, default=0.7, help='Fraction of seen vs unseen data to use for training')
-
+    parser.add_argument('--seed', type=int, default=42, help='Random seed')
     parser.add_argument('--dataset', type=str, default='cifar10', help='Name of the dataset to use')
     parser.add_argument('--augment', action='store_true', help='Whether to use data augmentation')
     parser.add_argument('--val-frac', type=float, default=0.2, help='Fraction of training data to use for validation')
@@ -49,7 +46,8 @@ def argparser():
     parser.add_argument('--weight-decay', type=float, default=5e-4, help='Weight decay (L2 penalty)')
     parser.add_argument('--lr-decay-rate', type=float, default=0.1, help='Learning rate decay rate (gamma)')
     parser.add_argument('--lr-decay-epochs', type=str, default='15,20,25', help='Comma-separated string of epochs after which to decay the learning rate')
-    parser.add_argument('--checkpoints-dir', type=str, default='checkpoints/', help='Relative directory to save model/data checkpoints')
+    parser.add_argument('--checkpoint-file', type=str, required=True, help='Relative directory to save model/data checkpoints')
+    
 
 
     #Wandb arguments
@@ -114,7 +112,7 @@ def finetune(model, train_loader, args, device, logger=None):
     else:
         raise ValueError("Optimizer not supported")
     
-    lr_dict = {'learning_rate': args.lr, 'lr_decay_epochs': args.lr_decay_epochs, 'lr_decay_rate': args.lr_decay_rate}
+    #lr_dict = {'learning_rate': args.lr, 'lr_decay_epochs': args.lr_decay_epochs, 'lr_decay_rate': args.lr_decay_rate}
 
     best_loss = float('inf')
     epochs_without_improvement = 0
@@ -174,6 +172,25 @@ def evaluate_model(model, test_loader, device):
     accuracy = 100 * correct / total
     return accuracy
 
+def retrain_divergences(original_model, retrain_model, train_loader, args, device):
+
+    train_loader = torch.utils.data.DataLoader(train_loader.dataset, batch_size=args.batch_size, shuffle=False)
+
+    original_model.eval()
+    retrain_model.eval()
+    kl_divergences = []
+    with torch.no_grad():
+        for images, labels, _ in train_loader:
+            images = images.to(device)
+            orig_probs = torch.softmax(original_model(images), dim=1)
+            retrain_probs = torch.softmax(retrain_model(images), dim=1)
+            kl_divergence = calculate_kl(orig_probs, retrain_probs)
+            kl_divergences.extend(kl_divergence.cpu().numpy().flatten())
+    
+    kl_divergences = np.array(kl_divergences)
+   
+    return kl_divergences
+
 def estimate(seed, args, logger=None):
 
     manual_seed(seed)
@@ -182,7 +199,7 @@ def estimate(seed, args, logger=None):
 
     model = get_model(seed, args, num_classes)
 
-    checkpoint = args.checkpoints_dir + f"{args.model}_{args.dataset}_seed{seed}.pt"
+    checkpoint = args.checkpoint_file
     
     if os.path.exists(checkpoint):
         model.load_state_dict(torch.load(checkpoint))
@@ -204,20 +221,10 @@ def estimate(seed, args, logger=None):
     print(f"Retrain Train accuracy: {ret_train_accuracy:.2f}%, Retrain Test accuracy: {ret_test_accuracy:.2f}%")   
 
 
-    train_loader = torch.utils.data.DataLoader(train_loader.dataset, batch_size=1024, shuffle=False)
-    model.eval()
-    retrain.eval()
-    kl_divergences = []
-    with torch.no_grad():
-        for images, labels, _ in train_loader:
-            images = images.to(device)
-            orig_probs = torch.softmax(model(images), dim=1)
-            retrain_probs = torch.softmax(retrain(images), dim=1)
-            kl_divergence = calculate_kl(orig_probs, retrain_probs)
-            kl_divergences.extend(kl_divergence.cpu().numpy().flatten())
-    
-    kl_divergences = np.array(kl_divergences)
-    print(kl_divergences.shape)
+
+    kl_divergences = retrain_divergences(model, retrain, train_loader, args, device)
+
+    print("KL Divergences shape: ", kl_divergences.shape)
 
     return dict(kl_divergences=kl_divergences)
 
@@ -229,17 +236,12 @@ if __name__ == '__main__':
     rich_print(args)
     print ('\n')
 
-    args.epochs = 500
-    args.lr = 0.001
-    args.batch_size = 128
 
-
-
-    npz_fn = f'checkpoints/heldout_retrain.npz'
+    npz_fn = f'results/heldout_retrain.npz'
     if os.path.exists(npz_fn):
         estimates = np.load(npz_fn)
     else:
-        metrics = estimate(seed=42, args=args, logger=None)
-        np.savez(f'checkpoints/heldout_retrain.npz', **metrics)
+        metrics = estimate(seed=args.seed, args=args, logger=None)
+        np.savez(f'results/heldout_retrain.npz', **metrics)
 
     
