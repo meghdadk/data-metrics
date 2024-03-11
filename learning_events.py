@@ -304,12 +304,12 @@ if __name__ == '__main__':
     rich_print(args)
     print ('\n')
 
-    for i in range(42, 52):
+    for i in range(args.num_runs):
 
         npz_fn = f'results/event_results_s{i}.npz'
         if os.path.exists(npz_fn):
             estimates = np.load(npz_fn)
         else:
-            metrics = estimate(seed=42, args=args, logger=None)
+            metrics = estimate(seed=i, args=args, logger=None)
             np.savez(f'results/event_results_s{i}.npz', **metrics)
     

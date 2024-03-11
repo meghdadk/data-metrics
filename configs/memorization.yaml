@@ -23,9 +23,3 @@ cifar10_resnet18:
   subset_ratio: 0.7
   train: false
   num_runs: 400
-
-  wandb_mode: online 
-  wandb_project: Hidden_Layer_Reduction
-  wandb_entity: "mkurmanji"
-  wandb_run_id: null
-  wandb_group_name: "cisar10_resnet18"

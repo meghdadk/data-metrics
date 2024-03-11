@@ -20,9 +20,3 @@ cifar10_resnet18:
   num_workers: 4
 
   num_runs: 10
-
-  wandb_mode: online 
-  wandb_project: Hidden_Layer_Reduction
-  wandb_entity: "mkurmanji"
-  wandb_run_id: null
-  wandb_group_name: "cisar10_resnet18"

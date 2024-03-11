@@ -1,21 +1,23 @@
 # config.yaml
 cifar10_resnet18:
-  checkpoint_file: checkpoints/<model_name>.pth
+  checkpoints_dir: checkpoints/
   dataset: cifar10withids
   model: resnet18
   augment: false
   val_frac: 0
   data_dir: /data/image_data/cifar10/
-
   seed: 42
-  lr: 0.001 
+
+  h: '0.01'
+  lr: 0.01 
   batch_size: 128
   optimizer: sgd
   weight_decay: 0.0005
-  epochs: 500
+  epochs: 30
   momentum: 0.9
   lr_decay_rate: 0.1
   lr_decay_epochs: "15, 20, 25"
+  criterion: ce
 
   weights_init: random 
   num_workers: 4
