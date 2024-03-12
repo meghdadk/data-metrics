@@ -270,10 +270,10 @@ if __name__ == '__main__':
     print ('\n')
 
 
-    npz_fn = f'checkpoints/loss_curvatures.npz'
+    npz_fn = f'results/loss_curvatures.npz'
     if os.path.exists(npz_fn):
         estimates = np.load(npz_fn)
     else:
         metrics = estimate(seed=args.seed, args=args, logger=None)
-        np.savez(f'checkpoints/loss_curvatures.npz', **metrics)
+        np.savez(f'results/loss_curvatures.npz', **metrics)
     

@@ -1,13 +1,13 @@
 # config.yaml
 cifar10_resnet18:
-  checkpoint_file: checkpoints/<model_name>.pth
+  checkpoint_file: checkpoints/event_resnet18_cifar10withids_seed0.pt
   dataset: cifar10withids
   model: resnet18
   augment: false
   val_frac: 0
   data_dir: /data/image_data/cifar10/
 
-  seed: 42
+  seed: 0
   lr: 0.001 
   batch_size: 128
   optimizer: sgd

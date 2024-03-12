@@ -46,7 +46,7 @@ def argparser():
     parser.add_argument('--weight-decay', type=float, default=5e-4, help='Weight decay (L2 penalty)')
     parser.add_argument('--lr-decay-rate', type=float, default=0.1, help='Learning rate decay rate (gamma)')
     parser.add_argument('--lr-decay-epochs', type=str, default='15,20,25', help='Comma-separated string of epochs after which to decay the learning rate')
-    parser.add_argument('--checkpoint-file', type=str, required=True, help='Relative directory to save model/data checkpoints')
+    parser.add_argument('--checkpoint-file', type=str, default=None, help='Relative directory to save model/data checkpoints')
     
 
 
